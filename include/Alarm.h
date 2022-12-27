@@ -16,7 +16,8 @@ public:
   bool      getActive();
   uint16_t  getAddress();
 
-  void update();
+  bool update(uint8_t newDay, uint8_t newHour, uint8_t newMinute, bool newLight, bool newSound);
+
 private:
   uint8_t day;
   uint8_t hour;
@@ -24,6 +25,5 @@ private:
   bool light;
   bool sound;
   uint16_t address;
-
   uint16_t EEPROMdata = 0xFF;
 };
