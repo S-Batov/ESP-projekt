@@ -3,20 +3,18 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
+#include "Alarm.h"
+#include <EEPROM.h>
 
 const char* ssid = "ISKONOVAC-7a7698";
 const char* password = "ISKON2914504818";
-
 const long utcOffsetInSeconds = 3600;
-
 const String daysOfTheWeek[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
-
-// Define NTP Client to get time
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
-
-//Define server
 ESP8266WebServer server(80);
+
+
 void printLogAtTime(const char* msg){
   Serial.print(msg);
   Serial.print(" at: ");
@@ -27,11 +25,6 @@ void printLogAtTime(const char* msg){
   Serial.println(timeClient.getSeconds());
 }
 
-void setAlarmAt(uint8_t day, uint8_t hour, uint8_t minute, uint8_t second){
-  //TODO:
-  //Write body
-}
-
 void handle_onConect(){
   //TODO:
   //Send data about current alarm settings
@@ -40,6 +33,7 @@ void handle_onConect(){
   server.send(200, "text/plain", "Hello world");
   return;
 }
+
 void handle_setAlarm(){
   // Parameter example
   // http://website.com/path?parameter1=value1&parameter2=value2
@@ -67,8 +61,6 @@ void handle_setAlarm(){
       //Provjerit je li vrijednost svakog parametra broj
       //Ako je, postavit alarm
     }
-    
-
     server.send(200, "text/plain", "setAlarm");
     return;
   default:
@@ -87,12 +79,26 @@ void handle_badRequest(){
   return;
 }
 
+void findAlarms(){
+  //TODO:
+  //Read EEPROM to find alarms and create them
+  return;
+}
 
+void handleAlarms(){
+  //TODO:
+  //Write body
+  return;
+}
 
 void setup(){
+  //Start serial
   Serial.begin(115200);
+  while(!Serial){
+    continue;
+  }
   
-
+  //Get time
   WiFi.begin(ssid, password);
   Serial.print("\n\n");
   while ( WiFi.status() != WL_CONNECTED ) {
@@ -104,6 +110,9 @@ void setup(){
   Serial.print("With IP: ");
   Serial.println(WiFi.localIP());
 
+  timeClient.begin();
+
+  //Setup server
   server.on("/", handle_onConect);
   server.on("/setAlarm", handle_setAlarm);
   server.on("/snooze", handle_snooze);
@@ -113,23 +122,15 @@ void setup(){
   server.begin();
   Serial.println("HTTP server started");
 
-  timeClient.begin();
+  //Setup EEPROM and alarms
+  EEPROM.begin(4096);
+  findAlarms();
 }
 
 void loop() {
   timeClient.update();
   server.handleClient();
+  handleAlarms();
 
-/*
-  Serial.print(daysOfTheWeek[timeClient.getDay()]);
-  Serial.print(", ");
-  Serial.print(timeClient.getHours());
-  Serial.print(":");
-  Serial.print(timeClient.getMinutes());
-  Serial.print(":");
-  Serial.println(timeClient.getSeconds());
-  Serial.println(timeClient.getFormattedTime());
-*/
-  
   delay(1000);
 }
