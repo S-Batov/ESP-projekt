@@ -99,9 +99,22 @@ void findAlarms(){
         Alarm al(day, hour, minute, light, sound, i, Alarms.size());
         Alarms.push_back(al);
       }
+      else
+        Serial.println("Invalid alarm settings found");
     }
   }
-  return;
+}
+
+bool deleteAlarm(uint16_t _index){
+  if(Alarms.size() < _index){
+    Serial.println("Index too big - no such alarm");
+    return false;
+  }
+  Alarms.erase(Alarms.begin() + _index);
+  for(uint16_t i = 0; i < Alarms.size(); i++){
+    Alarms[i].updateIndex(i);
+  }
+  return true;
 }
 
 void handleAlarms(){
@@ -143,7 +156,9 @@ void setup(){
 
   //Setup EEPROM and alarms
   EEPROM.begin(4096);
-  Alarm al((uint8_t) 1, (uint8_t) 1, (uint8_t) 1, true, true, (uint16_t) 0, (uint16_t)Alarms.size());
+  Alarm al0((uint8_t) 1, (uint8_t) 1, (uint8_t) 1, true, true, (uint16_t) 0, (uint16_t)Alarms.size());
+  Alarm al1((uint8_t) 2, (uint8_t) 2, (uint8_t) 2, true, true, (uint16_t) 2, (uint16_t)Alarms.size());
+  Alarm al2((uint8_t) 3, (uint8_t) 3, (uint8_t) 3, true, true, (uint16_t) 4, (uint16_t)Alarms.size());
   findAlarms();
 }
 
@@ -151,8 +166,6 @@ void loop() {
   timeClient.update();
   server.handleClient();
   handleAlarms();
-  
-  Serial.println(Alarms.size());
 
   delay(1000);
 }

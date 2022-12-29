@@ -52,6 +52,13 @@ bool Alarm::getSound(){
 uint16_t Alarm::getAddress(){
     return address;
 }
+uint16_t Alarm::getID(){
+    return index;
+}
+
+void Alarm::updateIndex(uint16_t newIndex){
+    index = newIndex;
+}
 
 bool Alarm::update(uint8_t newDay, uint8_t newHour, uint8_t newMinute, bool newLight, bool newSound){
     if(newDay > 6)
@@ -91,5 +98,4 @@ void Alarm::clear(){
     EEPROM.put(address, EEPROMdata);
     EEPROM.commit();
     Serial.println("Deleted alarm from EEPROM");
-    return;
 }

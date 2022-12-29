@@ -15,7 +15,9 @@ public:
     bool      getLight();
     bool      getSound();
     uint16_t  getAddress();
+    uint16_t  getID();
 
+    void updateIndex(uint16_t newIndex);
     bool update(uint8_t newDay, uint8_t newHour, uint8_t newMinute, bool newLight, bool newSound);
     void clear();
 
