@@ -23,15 +23,13 @@ IPAddress primaryDNS(8, 8, 8, 8);   //optional
 IPAddress secondaryDNS(8, 8, 4, 4); //optional
 
 void handle_onConect(){
-  //TODO:
-  //Send data about current alarm settings
   Serial.print("Client connected at: ");
   Serial.print(timeClient.getHours());
   Serial.print(":");
   Serial.print(timeClient.getMinutes());
   Serial.print(":");
   Serial.println(timeClient.getSeconds());
-/*
+
   String data = "";
 
   for(size_t i = 0; i < Alarms.size(); i++){
@@ -53,9 +51,7 @@ void handle_onConect(){
     data += "\n";
   }
   data += "\r";
-  */
-  server.send(200, "text/plain", "Hello world");
-  //server.send(200, "text/plain", data);
+  server.send(200, "text/plain", data);
 }
 
 void handle_setAlarm(){
@@ -186,8 +182,8 @@ void setup(){
   //Setup EEPROM and alarms
   EEPROM.begin(4096);
   Alarm al0((uint8_t) 1, (uint8_t) 1, (uint8_t) 1, true, true, (uint16_t) 0, (uint16_t)Alarms.size());
-  Alarm al1((uint8_t) 2, (uint8_t) 2, (uint8_t) 2, true, true, (uint16_t) 2, (uint16_t)Alarms.size());
-  Alarm al2((uint8_t) 3, (uint8_t) 3, (uint8_t) 3, true, true, (uint16_t) 4, (uint16_t)Alarms.size());
+  Alarm al1((uint8_t) 2, (uint8_t) 2, (uint8_t) 2, false, true, (uint16_t) 2, (uint16_t)Alarms.size());
+  Alarm al2((uint8_t) 3, (uint8_t) 3, (uint8_t) 3, false, false, (uint16_t) 4, (uint16_t)Alarms.size());
   findAlarms();
 }
 
