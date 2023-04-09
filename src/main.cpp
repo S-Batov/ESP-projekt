@@ -22,6 +22,8 @@ IPAddress subnet(255, 255, 0, 0);
 IPAddress primaryDNS(8, 8, 8, 8);   //optional
 IPAddress secondaryDNS(8, 8, 4, 4); //optional
 
+int createAlarm(uint8_t, uint8_t, uint8_t, bool, bool);
+
 void handle_onConect(){
   Serial.print("Client connected at: ");
   Serial.print(timeClient.getHours());
@@ -54,9 +56,45 @@ void handle_onConect(){
   server.send(200, "text/plain", data);
 }
 
+int checkParamValues(String data, String day, String hour, String minute, String light, String sound){
+  if(day.toInt() < 0 || day.toInt() >= 7){
+    Serial.println("Day value out of range");
+    data += "3: Day out of range";
+    return 3;
+  }
+  if(hour.toInt() < 0 || hour.toInt() >= 24){
+    Serial.println("Hour value out of range");
+    data += "4: Hour out of range";
+    return 4;
+  }
+  if(minute.toInt() < 0 || minute.toInt() >= 60){
+    Serial.println("Minute value out of range");
+    data += "5: Minute out of range";
+    return 5;
+  }
+  if(light.toInt() < 0 || light.toInt() > 1){
+    Serial.println("Light value out of range");
+    data += "6: Light out of range";
+    return 6;
+  }
+  if(sound.toInt() < 0 || sound.toInt() > 1){
+    Serial.println("Sound value out of range");
+    data += "7: Sound out of range";
+    return 7;
+  }
+  return 0; 
+}
+
 void handle_setAlarm(){
   // Parameter example
   // http://website.com/path?parameter1=value1&parameter2=value2
+  // Expected arguments:
+  // Day:     D - uint8_t <0, 6>
+  // Hour:    H - uint8_t <0, 23>
+  // Minute:  M - uint8_t <0, 59>
+  // Light:   L - uint8_t <0, 1>
+  // Sound:   S - uint8_t <0, 1>
+
   Serial.print("Set alarm at: ");
   Serial.print(timeClient.getHours());
   Serial.print(":");
@@ -65,7 +103,11 @@ void handle_setAlarm(){
   Serial.println(timeClient.getSeconds());
 
   uint8_t argCount = server.args();
-  const uint8_t expectedArgNum = 4;
+  const uint8_t expectedArgNum = 5;
+  const String argNames[] = {"D", "H", "M", "L", "S"};
+
+  String data = "";
+
   Serial.print("Number of arguments received: ");
   Serial.println(argCount);
   for(uint8_t i = 0; i < server.args(); i++){
@@ -73,27 +115,46 @@ void handle_setAlarm(){
     Serial.println(msg);
   }
 
-  const String argNames[] = {"D", "H", "M", "S"};
-  switch (argCount){
-  case expectedArgNum:
-    for(uint8_t i = 0; i < expectedArgNum; i++){
-      if(argNames[i] != server.argName(i)){
-        String msg = "Expected parameter: \"" + argNames[i] + "\" but got: \"" + server.argName(i) + "\"";
-        Serial.println(msg);
-        server.send(400, "text/plain", "Wrong parameters");
-      }
-      //TODO:
-      //Provjerit je li vrijednost svakog parametra broj
-      //Ako je, postavit alarm
-    }
-    server.send(200, "text/plain", "setAlarm");
-    return;
-  default:
-    server.send(400, "text/plain", "Expected 4 parameters: Day,Hour,Minute,Second");
-    Serial.print("Expected 4 parameters:\nDay,Hour,Minute,Second\n");
+  if (argCount != expectedArgNum){
+    data += "1: Wrong number of arguments received";
+    server.send(400, "text/plain", data);
     return;
   }
+
+  for(uint8_t i = 0; i < expectedArgNum; i++){
+    if(argNames[i] != server.argName(i)){
+      String msg = "Expected parameter: \"" + argNames[i] + "\" but got: \"" + server.argName(i) + "\"";
+      Serial.println(msg);
+      data += "2: Argument name mismathc";
+      server.send(400, "text/plain", data);
+      return;
+    }
+  }
+
+  if ( checkParamValues(data, server.arg(0), server.arg(1),
+            server.arg(2), server.arg(3), server.arg(4)) ){
+    server.send(400, "text/plain", data);
+    return;
+  }
+
+  Serial.println("Arguments are valid");
+
+  uint8_t d = server.arg(0).toInt();
+  uint8_t h = server.arg(1).toInt();
+  uint8_t m = server.arg(2).toInt();
+  bool l = server.arg(3).toInt();
+  bool s = server.arg(4).toInt();
+
+  if(createAlarm(d, h, m, l, s)){
+    data += "8: Alarm not created";
+    server.send(400, "text/plain", data);
+    return;
+  }
+  data += "0: Alarm successfully created";
+  server.send(400, "text/plain", data);
+  return;
 }
+
 void handle_snooze(){
   return;
 }
@@ -136,10 +197,9 @@ int createAlarm(uint8_t _day, uint8_t _hour, uint8_t _minute, bool _light, bool 
     return 5;
   if(Alarms.size()*2 >= EEPROM_MAX_ADDR-1)
     return 8;
+
   Alarm temp(_day, _hour, _minute, _light, _sound, Alarms.size()*2, Alarms.size());
   Alarms.push_back(temp);
-  Serial.print("Alarm created and stored to EEPROM address ");
-  Serial.println(Alarms.size()*2);
   return 0;
 }
 
