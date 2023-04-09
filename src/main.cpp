@@ -127,6 +127,22 @@ void findAlarms(){
   }
 }
 
+int createAlarm(uint8_t _day, uint8_t _hour, uint8_t _minute, bool _light, bool _sound){
+  if(_day > 6)
+    return 3;
+  if(_hour >= 24)
+    return 4;
+  if(_minute >= 60)
+    return 5;
+  if(Alarms.size()*2 >= EEPROM_MAX_ADDR-1)
+    return 8;
+  Alarm temp(_day, _hour, _minute, _light, _sound, Alarms.size()*2, Alarms.size());
+  Alarms.push_back(temp);
+  Serial.print("Alarm created and stored to EEPROM address ");
+  Serial.println(Alarms.size()*2);
+  return 0;
+}
+
 bool deleteAlarm(uint16_t _index){
   if(Alarms.size() < _index){
     Serial.println("Index too big - no such alarm");
@@ -181,9 +197,6 @@ void setup(){
 
   //Setup EEPROM and alarms
   EEPROM.begin(4096);
-  Alarm al0((uint8_t) 1, (uint8_t) 1, (uint8_t) 1, true, true, (uint16_t) 0, (uint16_t)Alarms.size());
-  Alarm al1((uint8_t) 2, (uint8_t) 2, (uint8_t) 2, false, true, (uint16_t) 2, (uint16_t)Alarms.size());
-  Alarm al2((uint8_t) 3, (uint8_t) 3, (uint8_t) 3, false, false, (uint16_t) 4, (uint16_t)Alarms.size());
   findAlarms();
 }
 
