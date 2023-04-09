@@ -15,32 +15,58 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 ESP8266WebServer server(80);
 std::vector<Alarm> Alarms;
+IPAddress local_IP(192, 168, 5, 43);
+IPAddress gateway(192, 168, 1, 1);
 
+IPAddress subnet(255, 255, 0, 0);
+IPAddress primaryDNS(8, 8, 8, 8);   //optional
+IPAddress secondaryDNS(8, 8, 4, 4); //optional
 
-
-void printLogAtTime(const char* msg){
-  Serial.print(msg);
-  Serial.print(" at: ");
+void handle_onConect(){
+  //TODO:
+  //Send data about current alarm settings
+  Serial.print("Client connected at: ");
   Serial.print(timeClient.getHours());
   Serial.print(":");
   Serial.print(timeClient.getMinutes());
   Serial.print(":");
   Serial.println(timeClient.getSeconds());
-}
+/*
+  String data = "";
 
-void handle_onConect(){
-  //TODO:
-  //Send data about current alarm settings
-
-  printLogAtTime("Client connected");
+  for(size_t i = 0; i < Alarms.size(); i++){
+    data += Alarms[i].getDay();
+    data += ":";
+    data += Alarms[i].getHour();
+    data += ":";
+    data += Alarms[i].getMinute();
+    data += ":";
+    if(Alarms[i].getLight())
+      data += 1;
+    else
+      data += 0;
+    data += ":";
+    if(Alarms[i].getSound())
+      data += 1;
+    else
+      data += 0;
+    data += "\n";
+  }
+  data += "\r";
+  */
   server.send(200, "text/plain", "Hello world");
-  return;
+  //server.send(200, "text/plain", data);
 }
 
 void handle_setAlarm(){
   // Parameter example
   // http://website.com/path?parameter1=value1&parameter2=value2
-  printLogAtTime("Set alarm");
+  Serial.print("Set alarm at: ");
+  Serial.print(timeClient.getHours());
+  Serial.print(":");
+  Serial.print(timeClient.getMinutes());
+  Serial.print(":");
+  Serial.println(timeClient.getSeconds());
 
   uint8_t argCount = server.args();
   const uint8_t expectedArgNum = 4;
@@ -131,6 +157,9 @@ void setup(){
   }
   
   //Get time
+  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    Serial.println("STA Failed to configure");
+  }
   WiFi.begin(ssid, password);
   Serial.print("\n\n");
   while ( WiFi.status() != WL_CONNECTED ) {
